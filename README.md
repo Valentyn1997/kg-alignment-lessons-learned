@@ -3,6 +3,9 @@ Implementation of reproducibility paper "Knowledge Graph Entity Alignment with G
 
 Link to arXiv: TODO
 
+## Explore results
+You can view the results of all experiments in [Experiments.ipynb](https://github.com/Valentyn1997/kg-alignment-lessons-learned/blob/master/notebooks/Experiments.ipynb).
+
 ## Instalation
 1. Make sure, you have Python 3.7
 2. ```sudo pip3 install torch```
