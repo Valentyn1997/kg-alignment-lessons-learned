@@ -1,7 +1,7 @@
 # kg-alignment-lessons-learned
 Implementation of reproducibility paper "Knowledge Graph Entity Alignment with Graph Convolutional Networks: Lessons Learned"
 
-Link to arXiv: TODO
+Link to arXiv: https://arxiv.org/abs/1911.08342
 
 ## Explore results
 You can view the results of all experiments in [Experiments.ipynb](https://github.com/Valentyn1997/kg-alignment-lessons-learned/blob/master/notebooks/Experiments.ipynb).
