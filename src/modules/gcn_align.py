@@ -27,7 +27,7 @@ class GCNAlign(nn.Module):
         conv_weight_init: FunctionType = init.xavier_uniform_,
         node_embedding_init: str = 'total',  # 'individual'
         dropout: float = 0.,
-        vertical_sharing: bool = True,
+        vertical_sharing: bool = False,
         *args, **kwargs
     ):
         super().__init__()

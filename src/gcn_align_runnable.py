@@ -13,6 +13,7 @@ import torch
 import tqdm
 import mlflow
 import mlflow.pytorch
+import pandas as pd
 from torch import optim
 from torch.nn import MarginRankingLoss, init
 from utils.torch_utils import evaluate_model
@@ -22,7 +23,7 @@ from modules.common import EdgeWeightsEnum, SimilarityEnum
 from modules.gcn_align import GCNAlign
 from modules.losses import SampledMatchingLoss
 from utils.common import get_param_info
-from utils.mlflow_utils import log_config_to_mlflow, log_metrics_to_mlflow, connect_mlflow, _to_dot
+from utils.mlflow_utils import log_config_to_mlflow, log_metrics_to_mlflow, connect_mlflow, _to_dot, get_best_runs_params_ablation
 
 
 def main():
@@ -50,19 +51,20 @@ def main():
         connect_mlflow('http://localhost:5000')
         mlflow.set_experiment(args.model_class)
 
-    # Set random seed
-    seed = 12306
-    torch.manual_seed(seed)
-    random.seed(seed)
-    torch.cuda.manual_seed(seed)
-    np.random.seed(seed)
-    torch.backends.cudnn.benchmark = False
-    torch.backends.cudnn.deterministic = True
+    seed = [12306]
+    params_search_list = []
+    subsets = {
+        'dwy100k': ['wd', 'yg'],
+        'wk3l15k': ['en_de', 'en_fr'],
+        'wk3l120k': ['en_de', 'en_fr'],
+        'dbp15k_full': ['zh_en', 'ja_en', 'fr_en'],
+        'dbp15k_jape': ['zh_en', 'ja_en', 'fr_en'],
+    }
 
-    # 1. Extensive hyperparameter search for one subset of one dataser (dbp15k_jape - zh_en)
+    # 1. Extensive hyperparameter search for one subset of one dataset (dbp15k_jape - zh_en)
     # params_search = {
-    #     'dataset_name': [args.dataset_name],
-    #     'subset_name': [args.subset_name],
+    #     'dataset_name': ['dbp15k_jape'],
+    #     'subset_name': ['zh_en'],
     #     'num_epochs': [10, 500, 2000, 3000],
     #     'lr': [0.1, 0.5, 1, 10, 20],
     #     'eval_batch_size': [1000],  # 1000
@@ -75,76 +77,15 @@ def main():
     #     'train_val_ratio': [0.7, 0.8],  # size of train subset in comparison with
     #     'node_embedding_init': ['total', 'individual'],
     #     'optimizer': [optim.SGD, optim.Adam],
-    #     'seed': [seed]
+    #     'seed': seed
     # }
+    # params_search_list = [dict(zip(params_search.keys(), values)) for values in itertools.product(*params_search.values())]
 
-    # 2. Extensive hyperparameter search for all datasets and subsets
-    subsets = {
-        'dwy100k': ['wd', 'yg'],
-        'wk3l15k': ['en_de', 'en_fr'],
-        'wk3l120k': ['en_de', 'en_fr'],
-        'dbp15k_full': ['zh_en', 'ja_en', 'fr_en'],
-        'dbp15k_jape': ['zh_en', 'ja_en', 'fr_en'],  # zh_en' already evaluated in 1
-    }
-    #
-    params_search = {
-        'dataset_name': [args.dataset_name],
-        'subset_name': subsets[args.dataset_name],
-        'num_epochs': [2000],
-        'lr': [1, 10, 20, 30],
-        'eval_batch_size': [1000],  # 1000
-        'embedding_dim': [200],
-        'n_layers': [2, 3, 4],
-        'num_negatives': [50],
-        'use_edge_weights': [EdgeWeightsEnum.inverse_in_degree],  # None
-        'use_conv_weights': [True],
-        'vertical_sharing': [False],  # [True, False]
-        'conv_weight_init': [init.xavier_uniform_],
-        'train_val_ratio': [0.8],  # size of train subset in comparison with
-        'node_embedding_init': ['total', 'none'],  # Cite normalisation constant
-        'optimizer': [optim.Adam],
-        'seed': [seed]
-    }
 
-    # params_search = {
-    #     'dataset_name': [args.dataset_name],
-    #     'subset_name': subsets[args.dataset_name],
-    #     'num_epochs': [2000, 3000],
-    #     'lr': [0.5, 1],
-    #     'eval_batch_size': [1000],  # 1000
-    #     'embedding_dim': [200],
-    #     'n_layers': [2],
-    #     'num_negatives': [100],
-    #     'use_edge_weights': [EdgeWeightsEnum.inverse_in_degree],  # None
-    #     'use_conv_weights': [False, True],
-    #     'conv_weight_init': [init.xavier_uniform_],
-    #     'train_val_ratio': [0.8],  # size of train subset in comparison with
-    #     'node_embedding_init': ['total'],  # Cite normalisation constant
-    #     'optimizer': [optim.SGD],
-    #     'seed': [seed]
-    # }
-
-    # 3. Retraining best param and non-param models on all the datasets
+    # 2. Retraining best param and non-param models on all the datasets
     # ​
-    # params_search = {
-    #     'dataset_name': [args.dataset_name],
-    #     'subset_name': subsets[args.dataset_name],
-    #     'num_epochs': [2000, 3000],
-    #     'lr': [0.5, 1],
-    #     'eval_batch_size': [1000],  # 1000
-    #     'embedding_dim': [200],
-    #     'n_layers': [2],
-    #     'num_negatives': [100],
-    #     'use_edge_weights': [EdgeWeightsEnum.inverse_in_degree],  # None
-    #     'use_conv_weights': [False, True],
-    #     'conv_weight_init': [init.xavier_uniform_],
-    #     'train_val_ratio': [0.8],  # size of train subset in comparison with
-    #     'node_embedding_init': ['none'],  # Cite normalisation constant
-    #     'optimizer': [optim.SGD],
-    #     'seed': [seed]
-    # }
 
-    # params_best_nonpar = {
+    # params_search_nonpar = {
     #     'dataset_name': [args.dataset_name],
     #     'subset_name': subsets[args.dataset_name],
     #     'num_epochs': [2000],
@@ -156,39 +97,100 @@ def main():
     #     'use_edge_weights': [EdgeWeightsEnum.inverse_in_degree],  # None
     #     'use_conv_weights': [False],
     #     'conv_weight_init': [init.xavier_uniform_],
-    #     'train_val_ratio': [1.0],  # size of train subset in comparison with
+    #     'train_val_ratio': [0.8],  # size of train subset in comparison with
     #     'node_embedding_init': ['none'],  # Cite normalisation constant
     #     'optimizer': [optim.Adam],
-    #     'seed': [seed]
+    #     'seed': seed
     # }
-    #
-    # params_best_par = {
+
+    # params_search_par = {
     #     'dataset_name': [args.dataset_name],
     #     'subset_name': subsets[args.dataset_name],
     #     'num_epochs': [2000],
     #     'lr': [1],
     #     'eval_batch_size': [1000],  # 1000
     #     'embedding_dim': [200],
-    #     'n_layers': [2],
-    #     'num_negatives': [100],
+    #     'n_layers': [3],
+    #     'num_negatives': [50],
     #     'use_edge_weights': [EdgeWeightsEnum.inverse_in_degree],  # None
     #     'use_conv_weights': [True],
     #     'conv_weight_init': [init.xavier_uniform_],
-    #     'train_val_ratio': [1.0],  # size of train subset in comparison with
-    #     'node_embedding_init': ['total'],
-    #     'optimizer': [optim.SGD],
-    #     'seed': [seed]
+    #     'train_val_ratio': [0.8],  # size of train subset in comparison with
+    #     'node_embedding_init': ['none'],  # Cite normalisation constant
+    #     'optimizer': [optim.Adam],
+    #     'seed': seed
     # }
 
-
-    params_search_list = [dict(zip(params_search.keys(), values)) for values in itertools.product(*params_search.values())]
-
-    # params_list_nonpar = [dict(zip(params_best_nonpar.keys(), values)) for values in itertools.product(*params_best_nonpar.values())]
+    # params_list_nonpar = [dict(zip(params_best_nonpar.keys(), values)) for values in
+    #                       itertools.product(*params_best_nonpar.values())]
     # params_list_par = [dict(zip(params_best_par.keys(), values)) for values in itertools.product(*params_best_par.values())]
-    # params_search_list = params_list_nonpar + params_list_par
+    # params_search_list = params_list_nonpar
+
+    # 3. Ablation study. Extensive hyperparameter search for all datasets and subsets
+
+    # # For use_conv_weights == True or (use_conv_weights == False and node_embedding_init == 'none')
+    # params_search1 = {
+    #     'dataset_name': [args.dataset_name],
+    #     'subset_name': subsets[args.dataset_name],
+    #     'num_epochs': [2000],
+    #     'lr': [1, 10, 20, 30],
+    #     'eval_batch_size': [1000],
+    #     'embedding_dim': [200],
+    #     'n_layers': [2, 3, 4],
+    #     'num_negatives': [50],
+    #     'use_edge_weights': [EdgeWeightsEnum.inverse_in_degree],  # None
+    #     'use_conv_weights': [False, True],
+    #     'conv_weight_init': [init.xavier_uniform_],
+    #     'train_val_ratio': [0.8],  # size of train subset in comparison with
+    #     'node_embedding_init': ['total', 'none'],
+    #     'optimizer': [optim.Adam],
+    #     'seed': seed
+    # }
+    #
+    # # For use_conv_weights == False and node_embedding_init == 'total'
+    # params_search2 = {
+    #     'dataset_name': [args.dataset_name],
+    #     'subset_name': subsets[args.dataset_name],
+    #     'num_epochs': [2000, 3000],
+    #     'lr': [0.5, 1],
+    #     'eval_batch_size': [1000],  # 1000
+    #     'embedding_dim': [200],
+    #     'n_layers': [2],
+    #     'num_negatives': [100],
+    #     'use_edge_weights': [EdgeWeightsEnum.inverse_in_degree],  # None
+    #     'use_conv_weights': [False],
+    #     'conv_weight_init': [init.xavier_uniform_],
+    #     'train_val_ratio': [0.8],  # size of train subset in comparison with
+    #     'node_embedding_init': ['total'],
+    #     'optimizer': [optim.SGD],
+    #     'seed': seed
+    # }
+    #
+    # params_search_list1 = [dict(zip(params_search1.keys(), values)) for values in itertools.product(*params_search1.values())]
+    # params_search_list2 = [dict(zip(params_search2.keys(), values)) for values in itertools.product(*params_search2.values())]
+    # params_search_list = params_search_list1 + params_search_list2
+
+    # Re-evaluating best runs on the whole datasets (5-runs to calculate std)
+    results_abl = get_best_runs_params_ablation()
+    seed = [42, 424, 4242, 42424, 424242]
+    results_abl['seed'] = [seed for _ in range(len(results_abl))]
+    results_abl['train_val_ratio'] = 1.0
+
+    s = results_abl.apply(lambda x: pd.Series(x['seed']), axis=1).stack().reset_index(level=1, drop=True)
+    s.name = 'seed'
+    results_abl = results_abl.drop('seed', axis=1).join(s)
+    params_search_list = results_abl.to_dict('records')
 
     for run, params in enumerate(params_search_list):
         logging.info(f'================== Run {run}/{len(params_search_list)} ==================')
+
+        # Set random seed
+        torch.manual_seed(params['seed'])
+        random.seed(params['seed'])
+        torch.cuda.manual_seed(params['seed'])
+        np.random.seed(params['seed'])
+        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.deterministic = True
 
         # Check, if run with current parameters already exists
         query = ' and '.join(list(map(lambda item: f"params.{item[0]} = '{str(item[1])}'", _to_dot(params).items())))
