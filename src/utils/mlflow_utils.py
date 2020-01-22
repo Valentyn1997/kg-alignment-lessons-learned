@@ -85,7 +85,7 @@ def get_best_runs_params_ablation(
     results_abl.use_conv_weights = results_abl.use_conv_weights.apply(eval)
     results_abl.conv_weight_init = results_abl.conv_weight_init.apply(lambda val: import_eval(val, 'from torch.nn.init import xavier_uniform_'))
     results_abl.optimizer = results_abl.optimizer.apply(lambda val: import_eval(val, 'from torch.optim import Adam, SGD'))
-    results_abl.use_edge_weights = results_abl.use_edge_weights.apply(lambda val: import_eval(val, 'from modules.common import EdgeWeightsEnum'))
+    results_abl.use_edge_weights = results_abl.use_edge_weights.apply(lambda val: import_eval(val, 'from src.modules.common import EdgeWeightsEnum'))
     results_abl.embedding_dim = results_abl.embedding_dim.astype(int)
     results_abl.eval_batch_size = results_abl.eval_batch_size.astype(int)
     results_abl.num_epochs = results_abl.num_epochs.astype(int)

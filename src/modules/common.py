@@ -10,7 +10,7 @@ from torch.nn import Parameter, functional as F
 
 # TODO check why this import does not work
 # from utils import pairwise_similarity, pdist
-from utils.torch_utils import l1c
+from src.utils.torch_utils import l1c
 
 __all__ = [
     'AverageAggregator',

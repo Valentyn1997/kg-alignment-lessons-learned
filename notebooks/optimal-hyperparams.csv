@@ -1,0 +1,13 @@
+num_epochs,num_negatives,conv_weight_init,use_edge_weights,dataset_name,use_conv_weights,n_layers,node_embedding_init,lr,subset_name,optimizer,eval_batch_size,embedding_dim
+2000,50,<function xavier_uniform_ at 0x7f6e042bf268>,inverse_in_degree,dwy100k,False,2,none,1.0,yg,<class 'torch.optim.adam.Adam'>,1000,200
+2000,50,<function xavier_uniform_ at 0x7f6e042bf268>,inverse_in_degree,dwy100k,False,2,none,1.0,wd,<class 'torch.optim.adam.Adam'>,1000,200
+2000,50,<function xavier_uniform_ at 0x7f6e042bf268>,inverse_in_degree,dbp15k_jape,False,2,none,1.0,fr_en,<class 'torch.optim.adam.Adam'>,1000,200
+2000,50,<function xavier_uniform_ at 0x7f6e042bf268>,inverse_in_degree,dbp15k_jape,False,2,none,1.0,ja_en,<class 'torch.optim.adam.Adam'>,1000,200
+2000,50,<function xavier_uniform_ at 0x7f6e042bf268>,inverse_in_degree,dbp15k_jape,False,2,none,1.0,zh_en,<class 'torch.optim.adam.Adam'>,1000,200
+2000,50,<function xavier_uniform_ at 0x7f6e042bf268>,inverse_in_degree,dbp15k_full,False,3,none,1.0,ja_en,<class 'torch.optim.adam.Adam'>,1000,200
+2000,50,<function xavier_uniform_ at 0x7f6e042bf268>,inverse_in_degree,dbp15k_full,False,4,none,1.0,zh_en,<class 'torch.optim.adam.Adam'>,1000,200
+2000,50,<function xavier_uniform_ at 0x7f6e042bf268>,inverse_in_degree,dbp15k_full,False,2,none,1.0,fr_en,<class 'torch.optim.adam.Adam'>,1000,200
+2000,50,<function xavier_uniform_ at 0x7f6e042bf268>,inverse_in_degree,wk3l15k,False,2,none,10.0,en_fr,<class 'torch.optim.adam.Adam'>,1000,200
+2000,50,<function xavier_uniform_ at 0x7f6e042bf268>,inverse_in_degree,wk3l15k,False,2,none,1.0,en_de,<class 'torch.optim.adam.Adam'>,1000,200
+2000,50,<function xavier_uniform_ at 0x7f6e042bf268>,inverse_in_degree,wk3l120k,False,2,none,1.0,en_de,<class 'torch.optim.adam.Adam'>,1000,200
+2000,50,<function xavier_uniform_ at 0x7f6e042bf268>,inverse_in_degree,wk3l120k,False,2,none,1.0,en_fr,<class 'torch.optim.adam.Adam'>,1000,200
