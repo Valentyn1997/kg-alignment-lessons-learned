@@ -1,12 +1,13 @@
 # kg-alignment-lessons-learned
+<a href="https://arxiv.org/abs/1911.08342"><img src="https://img.shields.io/badge/arXiv-1911.08342-b31b1b"/></a>
+
 Implementation of reproducibility paper "Knowledge Graph Entity Alignment with Graph Convolutional Networks: Lessons Learned"
 
-Link to arXiv: https://arxiv.org/abs/1911.08342
 
 ## Explore results
 You can view the results of all experiments in [Experiments.ipynb](https://github.com/Valentyn1997/kg-alignment-lessons-learned/blob/master/notebooks/Experiments.ipynb).
 
-## Instalation
+## Installation
 1. Make sure, you have Python 3.7
 2. ```sudo pip3 install torch```
 3. ```sudo pip3 install -r requirements.txt```
